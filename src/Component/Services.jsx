@@ -288,11 +288,12 @@
 
 // export default ExpertiseSection;
 
-import React, { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaArrowRight, FaUser, FaPhoneAlt, FaEnvelope } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import contactImg from "./photos/banner.png"; // Or update path if needed
 import FAQSection from "./FAQ";
+import EMICalculator from "../Component/EMICalculator"; // Make sure this exists
 
 const expertiseData = [
   {
@@ -345,11 +346,11 @@ const expertiseData = [
   },
 ];
 
-
-
-
 const ExpertiseSection = () => {
   const [submitted, setSubmitted] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const formRef = useRef(null);
+  const [showEmiForm , setShowEmiForm] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -357,43 +358,68 @@ const ExpertiseSection = () => {
     email: "",
   });
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  useEffect(() => {
+    if (!showEmiForm) {
+      const interval = setInterval(() => {
+        setShowPopup(true);
+      }, 20000);
+      return () => clearInterval(interval);
+    }
+  }, [showEmiForm]);
 
-  // Define full 8-key structure
-  const dataToSend = {
-    formType: "ExpertiseCallback",
-    name: formData.name || "",
-    surname: "", // Not used in this form
-    email: formData.email || "",
-    message: "", // Not used in this form
-    phone: formData.phone || "",
-    subject: "", // Not used in this form
-    contactUsType: "", // Not used in this form
+  useEffect(() => {
+    if (showPopup) {
+      const timeout = setTimeout(() => setShowPopup(false), 5000); // hide after 5 seconds
+      return () => clearTimeout(timeout);
+    }
+  }, [showPopup]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const dataToSend = {
+      formType: "ExpertiseCallback",
+      name: formData.name || "",
+      surname: "",
+      email: formData.email || "",
+      message: "",
+      phone: formData.phone || "",
+      subject: "",
+      contactUsType: "",
+    };
+
+    try {
+      const res = await fetch(import.meta.env.VITE_GOOGLE_SHEET_ID, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataToSend),
+      });
+      console.log("Response:", res);
+      alert("Form submitted successfully!");
+      setSubmitted(true); // ✅ Keep this true permanently
+      setShowPopup(false);
+      setShowEmiForm(true); // Show EMI Calculator after submission
+      setFormData({ name: "", phone: "", email: "" });
+
+      // 🔴 REMOVE THIS LINE:
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch (error) {
+      console.error("Submission failed", error);
+    }
   };
 
-  try {
-    const res = await fetch(import.meta.env.VITE_GOOGLE_SHEET_ID, {
-      method: "POST",
-      mode: "no-cors", // Required for Google Apps Script
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(dataToSend),
-    });
-    console.log("Response:", res);
-    console.log("Response body:", res.body);
-      alert("Form submitted successfully!");
-      setSubmitted(true);
-      setFormData({ name: "", phone: "", email: "" });
-      setTimeout(() => setSubmitted(false), 3000);
-    
-  } catch (error) {
-    console.error("Submission failed", error);
-  }
-};
-
-
+  const handleEmiClick = () => {
+    if (!showEmiForm) {
+      // Scroll to the form
+      const formElement = document.getElementById("lets-talk");
+      if (formElement) {
+        formElement.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
 
   return (
     <>
@@ -440,13 +466,57 @@ const ExpertiseSection = () => {
             ))}
           </div>
         </div>
+        <AnimatePresence>
+          {showPopup && !showEmiForm && (
+            <motion.div
+              initial={{ opacity: 0, y: -40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -40 }}
+              className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white shadow-xl border border-green-200 p-4 rounded-xl"
+            >
+              <p className="text-sm text-gray-800">
+                👋 Please fill out the Let's Talk form to access the EMI
+                Calculator.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
+
+      {/* EMI Calculator Section */}
+      <section className={`mt-10 relative max-w-4xl mx-auto px-6  `}>
+        {!showEmiForm && (
+          <div className="absolute z-50  left-0 h-full flex flex-col gap-2 items-center justify-center top-0 text-center w-full">
+            <p className="text-red-600 font-semibold">
+              ⚠️ Please fill the Lets Talk form above to access the EMI
+              Calculator
+            </p>
+            <button
+              onClick={handleEmiClick}
+              className="cursor-pointer bg-yellow-700 text-white  px-2 py-2 rounded-[8px]"
+            >
+              Click to go on form
+            </button>
+          </div>
+        )}
+        <div
+          className={`transition-all duration-500 relative ${
+            !showEmiForm ? "blur-sm pointer-events-none select-none" : "blur-0"
+          }`}
+        >
+          <EMICalculator />
+        </div>
       </section>
 
       {/* FAQ Section */}
       <FAQSection />
 
       {/* FORM SECTION */}
-      <section className="relative mt-24 max-w-6xl mx-auto px-4 md:px-10">
+      <section
+        ref={formRef}
+        id="lets-talk"
+        className="relative mt-24 max-w-6xl mx-auto px-4 md:px-10"
+      >
         {/* Background Blobs */}
         <motion.div
           animate={{ scale: [1, 1.3, 1] }}
@@ -546,7 +616,7 @@ const ExpertiseSection = () => {
               >
                 <FaPhoneAlt className="absolute left-3 top-3.5 text-gray-400" />
                 <input
-                name="phone"
+                  name="phone"
                   type="tel"
                   value={formData.phone}
                   onChange={(e) =>
