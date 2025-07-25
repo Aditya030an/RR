@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import FAQSection from "./FAQ";
 
 import Scroll from "./Scroll"
@@ -17,6 +17,8 @@ import com1 from "./photos/villa3.avif";
 import com2 from "./photos/villa2.avif";
 import com3 from "./photos/villa1.avif";
 import cover  from "./photos/videobg2.mp4"
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const collections = [
   {
@@ -55,10 +57,11 @@ const collections = [
 
 
 const Home = () => {
+ 
   return (
     <>
       {/* Hero Section */}
-      <section className="w-full bg-white text-center font-serif relative overflow-hidden">
+      <section className=" w-full sticky top-0 z-0 bg-white text-center font-serif relative overflow-hidden">
   <div className="w-full h-[90vh] relative overflow-hidden">
     {/* Background Video */}
     <video
@@ -99,11 +102,11 @@ const Home = () => {
 </section>
 
 
-      <Scroll></Scroll>
+      <Scroll className="section "></Scroll>
 
 
       <section
-      className="relative w-full min-h-screen bg-cover bg-center flex items-center px-6 md:px-16"
+      className="relative   z-10 w-full min-h-screen bg-cover bg-center flex items-center px-6 md:px-16"
       style={{ backgroundImage: `url(${bg})` }}
     >
       {/* Overlay for subtle darkening */}
@@ -172,7 +175,7 @@ const Home = () => {
 
 
 
-    <section className="bg-gray-100 py-16 px-6 md:px-20">
+    <section className="bg-gray-100 sticky top-[-110%] md:top-0 !z-999   py-16 px-6 md:px-20">
       {/* Section Title */}
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-semibold text-gray-800">

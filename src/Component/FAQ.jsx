@@ -110,7 +110,7 @@ const FAQSection = () => {
   };
 
   return (
-    <section className="w-full px-6 md:px-20 py-20 bg-white flex flex-col md:flex-row items-start gap-10">
+    <section className="w-full sticky top-100 px-6 md:px-20 py-20 bg-white flex flex-col md:flex-row items-start gap-10">
       {/* Left Title Section */}
       <div className="md:w-1/2">
         <h2 className="text-4xl md:text-5xl font-serif text-slate-900 font-semibold leading-snug">
